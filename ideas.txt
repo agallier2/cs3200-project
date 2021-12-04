@@ -32,3 +32,4 @@ FRONT END STUFF
 friend requests table
 round indices?
 add penalty to solve table--string
+have restrictions on friends
