@@ -3,7 +3,7 @@ import pymysql
 from getpass import getpass
 from typing import Tuple, List, Optional
 
-VALID_COMMANDS = {"q", "help", "friends"}
+VALID_COMMANDS = {"q", "help", "find_friends"}
 HELP_STATEMENT = """  q: quit
   help: see list of commands"""
 
@@ -88,7 +88,8 @@ def run_command_loop(cnx: pymysql.connections.Connection) -> None:
         elif command == 'logout':
             current_user = None
         elif is_valid_command(command):
-            execute(cnx, current_user, command, args)
+            result = execute(cnx, current_user, command, args)
+            print(result)
         else:
             print("Invalid command. Please try again.")
 
