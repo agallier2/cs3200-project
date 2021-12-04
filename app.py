@@ -1,47 +1,114 @@
 import pymysql
 
-username = input("Enter username: ")
-password = input("Enter your password: ")
+from getpass import getpass
+from typing import Tuple, List, Optional
 
-#Connect to server
-try:
-    cnx = pymysql.connect(host='localhost', user=username,
-                          password=password,
-                      db='cubes', charset='utf8mb4',
-                          cursorclass=pymysql.cursors.DictCursor)
+VALID_COMMANDS = {"q", "help", "friends"}
+HELP_STATEMENT = """  q: quit
+  help: see list of commands"""
 
-except pymysql.err.OperationalError:
-    print('Error: %d: %s' % (e.args[0], e.args[1]))
 
-command = ""
-valid_commands = ["q", "help", "friends"]
-help_statement = """ q: quit 
-help: see list of commands"""
+def get_db_credentials() -> Tuple[str, str]:
+    print('Connect to database')
+    username = input('Enter username: ')
+    password = getpass('Enter your password: ')
 
-#Loop--user can keep entering commands until they quit
-while command != "q":
-    command = input ('Please enter a command. To see a list of possible commands, type "help".\n') 
-    command_as_list = command.split()
-    if command_as_list[0] not in valid_commands:
-        print("Invalid command. Please try again.")
-    elif command_as_list[0] == "help":
-        print(help_statement)
-    else:
-        execute(command_as_list)
+    return username, password
 
-#Will be reached when the loop breaks
-cnx.close()
-quit()
 
-def execute(command_list):
+def connect_to_db(username: str, password: str) -> pymysql.connections.Connection:
+    """
+    Attempt to connect to the cubes MySQL database. If there is an error,
+    output it and return `None`.
+
+    :raises pymysql.err.OperationalError: if a connection error occurs
+    """
+    return pymysql.connect(
+        host='localhost',
+        user=username,
+        password=password,
+        db='cubes',
+        charset='utf8mb4',
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+
+def is_valid_command(command: str) -> bool:
+    return command in VALID_COMMANDS
+
+
+def execute(cnx: pymysql.connections.Connection, current_user: str, command: str, args: List[str]):
+    """
+    Executes a command as the given user with the given arguments.
+
+    If an error occurs, prints "Error: (code): (description)"
+    """
     try:
         cur = cnx.cursor()
-        command = command_list[0]
-
-        #Still need to 
-        if command == "friends":
-            user = command_list[1]
-            cur.callproc("find_friends",([user]))
+        cur.callproc(command, (args))
+        return cur.fetchall()
 
     except pymysql.Error as e:
-        print('Error: %d: %s' % (e.args[0], e.args[1]))
+        err_code, err_desc = e.args
+        print(f'Error: {err_code}: {err_desc}')
+
+
+def parse_user_input(user_input: str) -> Tuple[str, List[str]]:
+    """
+    :return: a tuple of `(command, [arguments...])`
+    """
+    if not user_input:
+        return None, []
+
+    terms = user_input.split()
+    return terms[0], terms[1:]
+
+
+def login(args: List[str]) -> Optional[str]:
+    if not args:
+        print('Please provide a username')
+    return args[0]
+
+
+def run_command_loop(cnx: pymysql.connections.Connection) -> None:
+    print('Enter commands. To see a list of possible commands, type "help".\n')
+    command, args = None, []
+    current_user = None
+
+    while True:
+        user_input = input('> ')
+        command, args = parse_user_input(user_input)
+
+        if command == "help":
+            print(HELP_STATEMENT)
+        elif command == 'q':
+            break
+        elif command == 'login':
+            current_user = login(args)
+        elif command == 'logout':
+            current_user = None
+        elif is_valid_command(command):
+            execute(cnx, current_user, command, args)
+        else:
+            print("Invalid command. Please try again.")
+
+        print()
+
+
+def main():
+    username, password = get_db_credentials()
+
+    try:
+        cnx = connect_to_db(username, password)
+    except pymysql.err.OperationalError as e:
+        error_code, error_description = e.args
+        print(f'Error: {error_code}: {error_description}')
+        return
+
+    run_command_loop(cnx)
+
+    cnx.close()
+
+
+if __name__ == '__main__':
+    main()
