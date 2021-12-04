@@ -1,0 +1,34 @@
+PROCEDURES - create
+- create session
+- new round in a session
+- submit solve in a round
+- add friend
+- create user 
+
+read
+- find all the solves in a round
+- find all solves by user and cube type
+- find a user's friends
+- who won a round
+- current average of 5 for a user in a session
+
+update
+- change the penalty on a solve
+- update number of friends in users table
+- change session name
+
+delete
+- delete a session (should delete all rounds and solves)
+- unfriend
+- delete a user
+
+TRIGGERS 
+- store # of friends in users table
+
+FRONT END STUFF
+- login
+- logout
+
+friend requests table
+round indices?
+add penalty to solve table--string
