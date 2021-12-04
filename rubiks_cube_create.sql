@@ -89,3 +89,30 @@ CREATE TABLE friends
     CONSTRAINT friends_pk
     PRIMARY KEY (id_1, id_2)
 );
+
+INSERT INTO `users` (`username`) VALUES ('audrey');
+INSERT INTO `users` (`username`) VALUES ('graham');
+INSERT INTO `users` (`username`) VALUES ('brooke');
+
+INSERT INTO `cube_types` (`cube_shape`, `cube_size`, `name`) VALUES ('cube', 3, 'standard');
+INSERT INTO `cube_types` (`cube_shape`, `cube_size`, `name`) VALUES ('cube', 4, '4 by 4');
+
+INSERT INTO `solves` (`time`) VALUES (34.5);
+INSERT INTO `solves` (`time`) VALUES (50.1);
+INSERT INTO `solves` (`time`) VALUES (100.4);
+INSERT INTO `solves` (`time`) VALUES (73.0);
+INSERT INTO `solves` (`time`) VALUES (30.4);
+
+INSERT INTO `sessions` (`session_name`, `start_time`) VALUES ('session_1', '2021-12-04 13:23:44');
+
+INSERT INTO `rounds` (`scramble`, `session_id`, `cube_id`) VALUES ("D' R2 U2 D2 B' U F D L2 B2 F' D F' B' R2 L B D L' B2 L U' D' B L2", 1, 1);
+INSERT INTO `rounds` (`scramble`, `session_id`, `cube_id`) VALUES ("R D B2 U' R2 F' D U2 F' L B L F D R2 D U' B' R' F2 R B' L U L", 1, 2);
+
+INSERT INTO `solve_logs` (`solve_id`, `user_id`, `round_id`) VALUES (1, 1, 1);
+INSERT INTO `solve_logs` (`solve_id`, `user_id`, `round_id`) VALUES (2, 2, 1);
+INSERT INTO `solve_logs` (`solve_id`, `user_id`, `round_id`) VALUES (3, 3, 1);
+INSERT INTO `solve_logs` (`solve_id`, `user_id`, `round_id`) VALUES (4, 1, 2);
+INSERT INTO `solve_logs` (`solve_id`, `user_id`, `round_id`) VALUES (5, 3, 2);
+
+INSERT INTO `friends` (`id_1`, `id_2`) VALUES (1, 2);
+INSERT INTO `friends` (`id_1`, `id_2`) VALUES (1, 3);

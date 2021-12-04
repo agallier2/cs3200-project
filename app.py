@@ -12,8 +12,11 @@ try:
 except pymysql.err.OperationalError:
     print('Error: %d: %s' % (e.args[0], e.args[1]))
 
-try:
 
+
+
+try:
+    print('Connected successfully')
 except pymysql.Error as e:
     print('Error: %d: %s' % (e.args[0], e.args[1]))
 
