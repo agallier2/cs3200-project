@@ -15,14 +15,15 @@ CREATE TABLE cube_types
 CREATE TABLE users
 (
 	`user_id`	INT 	PRIMARY KEY		auto_increment,
-    `username`	VARCHAR(100)	NOT NULL	unique
+    `username`	VARCHAR(100)	NOT NULL	unique,
+    `num_friends` INT	DEFAULT 0
 );
 
 -- The session entity
 CREATE TABLE sessions
 (
 	`session_id` INT	PRIMARY KEY		auto_increment,
-    `session_name`	VARCHAR(100),
+    `session_name`	VARCHAR(100)		UNIQUE,
     `start_time` 	DATETIME,
     `cube_id`		INT,
     CONSTRAINT session_fk_cube
@@ -56,7 +57,7 @@ CREATE TABLE rounds
 -- Can change later
 CREATE TABLE solve_logs
 (
-	`solve_id`	INT 	NOT NULL,
+	`solve_id`	INT 	NOT NULL	UNIQUE,
     `user_id`	INT		NOT NULL,
     `round_id`	INT		NOT NULL,
     CONSTRAINT logs_fk_solve
@@ -92,9 +93,10 @@ CREATE TABLE friends
     PRIMARY KEY (user_1_id, user_2_id)
 );
 
-INSERT INTO `users` (`username`) VALUES ('audrey');
-INSERT INTO `users` (`username`) VALUES ('graham');
-INSERT INTO `users` (`username`) VALUES ('brooke');
+INSERT INTO `users` (`username`, `num_friends`) VALUES ('audrey', 3);
+INSERT INTO `users` (`username`, `num_friends`) VALUES ('graham', 1);
+INSERT INTO `users` (`username`, `num_friends`) VALUES ('brooke', 1);
+INSERT INTO `users` (`username`, `num_friends`) VALUES ('chirag', 1);
 
 INSERT INTO `cube_types` (`cube_shape`, `cube_size`, `name`) VALUES ('cube', 3, 'standard');
 INSERT INTO `cube_types` (`cube_shape`, `cube_size`, `name`) VALUES ('cube', 4, '4 by 4');
@@ -104,6 +106,7 @@ INSERT INTO `solves` (`time`) VALUES (50.1);
 INSERT INTO `solves` (`time`) VALUES (100.4);
 INSERT INTO `solves` (`time`, `penalty`) VALUES (73.0, "+2");
 INSERT INTO `solves` (`time`) VALUES (30.4);
+INSERT INTO `solves` (`time`) VALUES (90.9);
 
 INSERT INTO `sessions` (`session_name`, `start_time`, `cube_id`) VALUES ('session_1', '2021-12-04 13:23:44', 1);
 
@@ -115,6 +118,8 @@ INSERT INTO `solve_logs` (`solve_id`, `user_id`, `round_id`) VALUES (2, 2, 1);
 INSERT INTO `solve_logs` (`solve_id`, `user_id`, `round_id`) VALUES (3, 3, 1);
 INSERT INTO `solve_logs` (`solve_id`, `user_id`, `round_id`) VALUES (4, 1, 2);
 INSERT INTO `solve_logs` (`solve_id`, `user_id`, `round_id`) VALUES (5, 3, 2);
+INSERT INTO `solve_logs` (`solve_id`, `user_id`, `round_id`) VALUES (6, 4, 2);
 
 INSERT INTO `friends` (`user_1_id`, `user_2_id`) VALUES (1, 2);
 INSERT INTO `friends` (`user_1_id`, `user_2_id`) VALUES (1, 3);
+INSERT INTO `friends` (`user_1_id`, `user_2_id`) VALUES (1, 4);
