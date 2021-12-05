@@ -1,4 +1,4 @@
-USE cubes;
+USE cubes1;
 
 DROP FUNCTION IF EXISTS get_user_id;
 DELIMITER //
@@ -29,12 +29,14 @@ DELIMITER ;
 -- Procedure to find all the friends of a user
 DROP PROCEDURE IF EXISTS find_friends;
 DELIMITER //
-CREATE PROCEDURE find_friends(IN uname VARCHAR(100))
+CREATE PROCEDURE find_friends(IN user_id int)
 BEGIN
--- WITH id AS (SELECT get_user_id(username))
-SELECT username FROM users JOIN
-((SELECT user_1_id AS this_user, user_2_id AS friend FROM friends WHERE user_1_id = (SELECT get_user_id(uname)))
-UNION (SELECT user_2_id AS this_user, user_1_id AS friend FROM friends WHERE user_2_id = (SELECT get_user_id(uname)))) AS friends
+SELECT username FROM users
+JOIN (
+	(SELECT user_1_id AS this_user, user_2_id AS friend FROM friends WHERE user_1_id = user_id)
+	UNION
+	(SELECT user_2_id AS this_user, user_1_id AS friend FROM friends WHERE user_2_id = user_id)
+) as t
 ON friend = users.user_id;
 END //
 DELIMITER ;
@@ -115,37 +117,36 @@ OR user_1_id = (SELECT get_user_id(name_2)) AND user_2_id = (SELECT get_user_id(
 END //
 DELIMITER ;
 
--- Trigger to update num_friends when a friend is added
-DROP TRIGGER IF EXISTS update_friends;
+-- Procedure to create a session
+DROP PROCEDURE IF EXISTS create_session;
 DELIMITER //
-CREATE TRIGGER update_friends AFTER INSERT ON friends
-FOR EACH ROW 
+CREATE PROCEDURE create_session(IN session_name VARCHAR(100), cube_id INT)
 BEGIN
-	DECLARE friend_1 INT;
-    DECLARE friend_2 INT;
-    SELECT NEW.user_1_id INTO friend_1;
-    SELECT NEW.user_2_id INTO friend_2;
-	UPDATE users SET num_friends = num_friends + 1 WHERE user_id = friend_1;
-	UPDATE users SET num_friends = num_friends + 1 WHERE user_id = friend_2;
-END//
+INSERT INTO sessions (`session_name`, `cube_id`) VALUES (session_name, cube_id);
+END //
 DELIMITER ;
 
--- Trigger to update num_friends when a friend is deleted
-DROP TRIGGER IF EXISTS update_friends_on_delete;
+-- Procedure to add a round to a session
+DROP PROCEDURE IF EXISTS add_round;
 DELIMITER //
-CREATE TRIGGER update_friends_on_delete BEFORE DELETE ON friends
-FOR EACH ROW 
+CREATE PROCEDURE add_round(IN scramble VARCHAR(250), session_id int)
 BEGIN
-	DECLARE friend_1 INT;
-    DECLARE friend_2 INT;
-    SELECT OLD.user_1_id INTO friend_1;
-    SELECT OLD.user_2_id INTO friend_2;
-	UPDATE users SET num_friends = num_friends - 1 WHERE user_id = friend_1;
-	UPDATE users SET num_friends = num_friends - 1 WHERE user_id = friend_2;
-END//
+INSERT INTO rounds (`scramble`, `session_id`) VALUES (scramble, session_id);
+END //
 DELIMITER ;
 
-CALL add_friend("graham", "chirag");
+-- Procedure to add a solve to a round
+DROP PROCEDURE IF EXISTS add_solve;
+DELIMITER //
+CREATE PROCEDURE add_solve(IN user_id INT, round_id INT, time FLOAT, penalty VARCHAR(10))
+BEGIN
+INSERT INTO solves (`time`, `penalty`) VALUES (time, penalty);
+INSERT INTO solve_logs (`solve_id`, `user_id`, `round_id`)
+	VALUES ((select max(solve_id) from solves), user_id, round_id);
+END //
+DELIMITER ;
+
+-- CALL add_friend("graham", "chirag");
 
 -- CALL create_user("sreyas");
 

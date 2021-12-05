@@ -1,13 +1,11 @@
-DROP DATABASE IF EXISTS cubes;
-CREATE DATABASE cubes;
-USE cubes;
+DROP DATABASE IF EXISTS cubes1;
+CREATE DATABASE cubes1;
+USE cubes1;
 
 -- The cube type entity
 CREATE TABLE cube_types
 (
 	`cube_id`	INT		PRIMARY KEY 	auto_increment,
-    `cube_shape`	VARCHAR(100),
-	`cube_size`		INT,
     `name`		VARCHAR(100)
 );
 
@@ -24,20 +22,11 @@ CREATE TABLE sessions
 (
 	`session_id` INT	PRIMARY KEY		auto_increment,
     `session_name`	VARCHAR(100)		UNIQUE,
-    `start_time` 	DATETIME,
     `cube_id`		INT,
     CONSTRAINT session_fk_cube
     FOREIGN KEY (cube_id)
     REFERENCES cube_types (cube_id) -- put in session instead
     ON UPDATE CASCADE ON DELETE SET NULL
-);
-
--- The solve entity
-CREATE TABLE solves
-(
-	`solve_id`	INT		PRIMARY KEY		auto_increment,
-    `time`		FLOAT,
-    `penalty`	VARCHAR(32)
 );
 
 -- The round entity
@@ -46,11 +35,18 @@ CREATE TABLE rounds
 	`round_id`	INT		PRIMARY KEY		auto_increment,
     `scramble`	VARCHAR(250) 	NOT NULL,
     `session_id`	INT,
-    `cube_id`	INT,
     CONSTRAINT round_fk_session
     FOREIGN KEY (session_id)
     REFERENCES sessions (session_id)
     ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- The solve entity
+CREATE TABLE solves
+(
+	`solve_id`	INT		PRIMARY KEY		auto_increment,
+    `time`		FLOAT,
+    `penalty`	VARCHAR(32)
 );
 
 -- The complex relationship
@@ -93,13 +89,44 @@ CREATE TABLE friends
     PRIMARY KEY (user_1_id, user_2_id)
 );
 
-INSERT INTO `users` (`username`, `num_friends`) VALUES ('audrey', 3);
-INSERT INTO `users` (`username`, `num_friends`) VALUES ('graham', 1);
-INSERT INTO `users` (`username`, `num_friends`) VALUES ('brooke', 1);
-INSERT INTO `users` (`username`, `num_friends`) VALUES ('chirag', 1);
+-- Trigger to update num_friends when a friend is added
+DROP TRIGGER IF EXISTS update_friends;
+DELIMITER //
+CREATE TRIGGER update_friends AFTER INSERT ON friends
+FOR EACH ROW 
+BEGIN
+	DECLARE friend_1 INT;
+    DECLARE friend_2 INT;
+    SELECT NEW.user_1_id INTO friend_1;
+    SELECT NEW.user_2_id INTO friend_2;
+	UPDATE users SET num_friends = num_friends + 1 WHERE user_id = friend_1;
+	UPDATE users SET num_friends = num_friends + 1 WHERE user_id = friend_2;
+END//
+DELIMITER ;
 
-INSERT INTO `cube_types` (`cube_shape`, `cube_size`, `name`) VALUES ('cube', 3, 'standard');
-INSERT INTO `cube_types` (`cube_shape`, `cube_size`, `name`) VALUES ('cube', 4, '4 by 4');
+-- Trigger to update num_friends when a friend is deleted
+DROP TRIGGER IF EXISTS update_friends_on_delete;
+DELIMITER //
+CREATE TRIGGER update_friends_on_delete BEFORE DELETE ON friends
+FOR EACH ROW 
+BEGIN
+	DECLARE friend_1 INT;
+    DECLARE friend_2 INT;
+    SELECT OLD.user_1_id INTO friend_1;
+    SELECT OLD.user_2_id INTO friend_2;
+	UPDATE users SET num_friends = num_friends - 1 WHERE user_id = friend_1;
+	UPDATE users SET num_friends = num_friends - 1 WHERE user_id = friend_2;
+END//
+DELIMITER ;
+
+INSERT INTO `users` (`username`) VALUES ('audrey');
+INSERT INTO `users` (`username`) VALUES ('graham');
+INSERT INTO `users` (`username`) VALUES ('brooke');
+INSERT INTO `users` (`username`) VALUES ('chirag');
+
+INSERT INTO `cube_types` (`name`) VALUES ('3x3');
+INSERT INTO `cube_types` (`name`) VALUES ('4x4');
+INSERT INTO `cube_types` (`name`) VALUES ('Pyraminx');
 
 INSERT INTO `solves` (`time`, `penalty`) VALUES (34.5, "DNF");
 INSERT INTO `solves` (`time`) VALUES (50.1);
@@ -108,7 +135,7 @@ INSERT INTO `solves` (`time`, `penalty`) VALUES (73.0, "+2");
 INSERT INTO `solves` (`time`) VALUES (30.4);
 INSERT INTO `solves` (`time`) VALUES (90.9);
 
-INSERT INTO `sessions` (`session_name`, `start_time`, `cube_id`) VALUES ('session_1', '2021-12-04 13:23:44', 1);
+INSERT INTO `sessions` (`session_name`, `cube_id`) VALUES ('session_1', 1);
 
 INSERT INTO `rounds` (`scramble`, `session_id`) VALUES ("D' R2 U2 D2 B' U F D L2 B2 F' D F' B' R2 L B D L' B2 L U' D' B L2", 1);
 INSERT INTO `rounds` (`scramble`, `session_id`) VALUES ("R D B2 U' R2 F' D U2 F' L B L F D R2 D U' B' R' F2 R B' L U L", 1);
