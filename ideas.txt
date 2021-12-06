@@ -2,9 +2,9 @@ X = done in SQL
 OK = working with app too
 
 PROCEDURES - create
-- create session
-- new round in a session
-- submit solve in a round
+X create session
+X new round in a session
+X submit solve in a round
 X add friend
 X create user
 
@@ -25,7 +25,7 @@ delete
 X unfriend
 X - delete a user
 
-TRIGGERS 
+TRIGGERS
 X store # of friends in users table
 
 FRONT END STUFF
