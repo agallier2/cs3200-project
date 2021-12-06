@@ -2,34 +2,25 @@ import pymysql
 
 from getpass import getpass
 from inspect import signature
-from typing import Tuple, List, Optional, Set
+from typing import Tuple, List, Optional
 
 # Valid commands and help text
 COMMANDS = [
-    ('q', 'quit'),
+    ('q', [], 'quit'),
     ('help', 'see list of commands'),
     ('login', 'login via username'),
     ('logout', 'reset current user'),
     ('current_user', 'check current user'),
     ('create_user', 'add a new user to the database'),
-    ('create_session', 'self explanatory'),
-    ('find_friends', 'see friends of the current user')
+    ('create_session', ['session_name', 'cube_type'], 'add a new session to the database'),
+    ('find_friends', [], 'see friends of the current user'),
+    ('add_friend', ['friend_name'], 'add a user as a friend'),
+    ('remove_friend', ['friend_name'], 'remove a user as a friend')
 ]
 
-def valid_commands() -> Set[str]:
-    """
-    Retrieve a set of valid commands.
-    """
-    return {command for command, _ in COMMANDS}
-
-
-def is_valid_command(command: str) -> bool:
-    return command in valid_commands()
-
-
 def print_help() -> None:
-    for command, help in COMMANDS:
-        print(f'  {command}: {help}')
+    for command, args, help in COMMANDS:
+        print(f'  {command} {" ".join(args)}: {help}')
 
 
 class FrontendState:
@@ -37,7 +28,6 @@ class FrontendState:
     State within the lifecycle of the command loop.
     """
     current_user = None
-    current_session_id = None
 
     def __init__(self, cnx: pymysql.connections.Connection):
         self.cnx = cnx
@@ -84,25 +74,39 @@ class CommandExecutor:
         """
         Log in via username. Return `True` if successful, `False` otherwise.
         """
-        v = self.fe_state.login(username)
-        return bool(v)
+        success = self.fe_state.login(username)
 
-    def logout(self) -> None:
+        if not success:
+            print('User does not exist')
+            return None
+        return True
+
+    def logout(self) -> bool:
         self.fe_state.logout()
+        return True
 
-    def current_user(self) -> dict:
-        return self.fe_state.current_user
+    def current_user(self) -> str:
+        if not self.fe_state.check_logged_in():
+            return None
+        return self.fe_state.current_user['username']
 
     def create_user(self, username: str):
         return execute_proc(self.fe_state.cnx, 'create_user', [username])
 
     def delete_account(self) -> bool:
         if not self.fe_state.check_logged_in():
-            return False
+            return None
 
-        execute_proc(self.fe_state.cnx, 'remove_user', [self.fe_state.current_user['username']])
+        ret = execute_proc(self.fe_state.cnx, 'remove_user', [self.fe_state.current_user['username']])
         self.logout()
-        return True
+        return ret
+
+    def update_username(self, new_username: str):
+        if not self.fe_state.check_logged_in():
+            return None
+
+        self.fe_state.current_user['username'] = new_username
+        return execute_proc(self.fe_state.cnx, 'update_username', [self.fe_state.current_user['username'], new_username])
 
     def find_friends(self) -> Optional[List[str]]:
         """
@@ -114,27 +118,20 @@ class CommandExecutor:
         result = execute_proc(self.fe_state.cnx, 'find_friends', [self.fe_state.current_user['username']])
         return [row['username'] for row in result]
 
-    def add_friend(self, friend_name: str) -> bool:
+    def add_friend(self, friend_name: str):
         """
         Add a friend.
         """
         if not self.fe_state.check_logged_in():
-            return False
+            return None
+        return execute_proc(self.fe_state.cnx, 'add_friend', [self.fe_state.current_user['username'], friend_name])
 
-        execute_proc(self.fe_state.cnx, 'add_friend', [self.fe_state.current_user['username'], friend_name])
-        return True
-
-    def remove_friend(self, friend_name: str) -> bool:
+    def remove_friend(self, friend_name: str):
         if not self.fe_state.check_logged_in():
-            return False
+            return None
+        return execute_proc(self.fe_state.cnx, 'remove_friend', [self.fe_state.current_user['username'], friend_name])
 
-        execute_proc(self.fe_state.cnx, 'remove_friend', [self.fe_state.current_user['username'], friend_name])
-        return True
-
-    def create_session(self, session_name: str, cube_type: str) -> Optional[int]:
-        """
-        Create a session. Return the session ID, or `None` if not logged in.
-        """
+    def create_session(self, session_name: str, cube_type: str):
         return execute_proc(self.fe_state.cnx, 'create_session', [session_name, cube_type])
 
     def list_sessions(self) -> List[dict]:
@@ -183,7 +180,12 @@ class CommandExecutor:
 
             try:
                 result = f(*args)
-                if result is not None:
+                if result is True or result == ():
+                    print('Success')
+                elif isinstance(result, (list, tuple)):
+                    for thing in result:
+                        print(thing)
+                elif result is not None:
                     print(result)
             except TypeError:
                 num_params = len(signature(f).parameters)
@@ -266,7 +268,7 @@ def run_command_loop(cnx: pymysql.connections.Connection) -> None:
         else:
             exc.execute_command(command, args)
 
-    # cnx.commit()
+    cnx.commit()
 
 
 def main():
