@@ -76,6 +76,17 @@ CREATE TABLE friends
     PRIMARY KEY (user_1_id, user_2_id)
 );
 
+-- The note entity
+CREATE TABLE notes
+(
+	`user_id`	INT,
+    `text`		VARCHAR(256),
+    CONSTRAINT notes_fk_user
+    FOREIGN KEY (user_id)
+    REFERENCES users (user_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 -- Trigger to update num_friends when a friend is added
 DROP TRIGGER IF EXISTS update_friends;
 DELIMITER //
@@ -130,3 +141,6 @@ INSERT INTO `solves` (`time`, `user_id`, `round_id`) VALUES (90.9, 4, 2);
 INSERT INTO `friends` (`user_1_id`, `user_2_id`) VALUES (1, 2);
 INSERT INTO `friends` (`user_1_id`, `user_2_id`) VALUES (1, 3);
 INSERT INTO `friends` (`user_1_id`, `user_2_id`) VALUES (1, 4);
+
+INSERT INTO `notes` (`user_id`, `text`) VALUES (2, "I won today!");
+INSERT INTO `notes` (`user_id`, `text`) VALUES (1, "Practice on 4x4");

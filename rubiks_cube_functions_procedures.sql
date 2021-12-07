@@ -63,7 +63,7 @@ DELIMITER //
 CREATE PROCEDURE get_winner(IN round INT)
 BEGIN
 SELECT username FROM users NATURAL JOIN
-(SELECT * FROM solves NATURAL JOIN solve_logs WHERE (round_id = round AND (penalty IS NULL OR penalty != "DNF"))) AS logs ORDER BY time ASC LIMIT 1;
+(SELECT * FROM solves WHERE (round_id = round AND (penalty IS NULL OR penalty != "DNF"))) AS logs ORDER BY time ASC LIMIT 1;
 END //
 DELIMITER ;
 
@@ -73,27 +73,25 @@ DELIMITER //
 CREATE PROCEDURE get_solves(IN round INT)
 BEGIN
 SELECT username, time, penalty FROM users NATURAL JOIN
-(SELECT * FROM solves NATURAL JOIN solve_logs WHERE round_id = round) AS logs ORDER BY time ASC;
+(SELECT * FROM solves WHERE round_id = round) AS logs ORDER BY time ASC;
 END //
 DELIMITER ;
 
 -- Procedure to change the session name
 DROP PROCEDURE IF EXISTS change_session_name;
 DELIMITER //
-CREATE PROCEDURE change_session_name(IN old_name VARCHAR(100), IN new_name VARCHAR(100))
+CREATE PROCEDURE change_session_name(IN old_id INT, IN new_name VARCHAR(100))
 BEGIN
-UPDATE sessions SET session_name = new_name WHERE session_id = (SELECT get_session_id(old_name));
+UPDATE sessions SET session_name = new_name WHERE session_id = old_id;
 END //
 DELIMITER ;
-
--- CALL change_session_name("my_session", "session_1");
 
 -- Prodecure to add a penalty to a user's solve for a round
 DROP PROCEDURE IF EXISTS add_penalty;
 DELIMITER //
 CREATE PROCEDURE add_penalty(IN uname VARCHAR(100), IN roundid INT, IN pen VARCHAR(32))
 BEGIN
-UPDATE solves SET penalty = pen WHERE solve_id = (SELECT solve_id FROM solve_logs WHERE round_id = roundid AND user_id = (SELECT get_user_id(uname)));
+UPDATE solves SET penalty = pen WHERE round_id = roundid AND user_id = (SELECT get_user_id(uname));
 END //
 DELIMITER ;
 
@@ -197,13 +195,11 @@ DELIMITER //
 CREATE PROCEDURE find_solves_for_user(IN uname VARCHAR(100))
 BEGIN
 SELECT round_id, time, penalty, name 
-FROM (SELECT * FROM solves NATURAL JOIN solve_logs NATURAL JOIN rounds NATURAL JOIN
+FROM (SELECT * FROM solves NATURAL JOIN rounds NATURAL JOIN
 (SELECT round_id, name FROM rounds NATURAL JOIN (SELECT session_id, name FROM sessions NATURAL JOIN cube_types) AS t) AS t2) AS t3
 WHERE user_id = (SELECT get_user_id(uname)) ORDER BY name, time ASC;
 END // 
 DELIMITER ;
-
--- CALL find_solves_for_user("audrey");
 
 -- Procedure to calculate the current average of the last 5 time submitted by a user
 -- If user does not have 5 yet, averages all the scores
@@ -211,12 +207,10 @@ DROP PROCEDURE IF EXISTS average_of_5;
 DELIMITER //
 CREATE PROCEDURE average_of_5(IN uname VARCHAR(100))
 BEGIN
-SELECT AVG(time) FROM solves NATURAL JOIN solve_logs 
+SELECT AVG(time) FROM solves
 WHERE user_id = (SELECT get_user_id(uname)) ORDER BY solve_id DESC LIMIT 5;
 END //
 DELIMITER ;
-
--- CALL average_of_5("audrey");
 
 -- Procedure to update a username
 DROP PROCEDURE IF EXISTS update_username;
@@ -227,14 +221,12 @@ UPDATE users SET username = new_name WHERE user_id = (SELECT get_user_id(old_nam
 END //
 DELIMITER ;
 
--- CALL update_username("graham", "audreys_partner");
-
 -- Prodecure to delete a session--should also delete rounds and solve log entries
 DROP PROCEDURE IF EXISTS delete_session;
 DELIMITER //
-CREATE PROCEDURE delete_session(IN session_name VARCHAR(100))
+CREATE PROCEDURE delete_session(IN sessionid INT)
 BEGIN
-DELETE FROM sessions WHERE session_id = (SELECT get_session_id(session_name));
+DELETE FROM sessions WHERE session_id = sessionid;
 END //
 DELIMITER ;
 
@@ -246,19 +238,3 @@ BEGIN
 	DELETE FROM rounds WHERE round_id = roundid;
 END //
 DELIMITER ;
-
--- CALL add_friend("graham", "chirag");
-
--- CALL create_user("sreyas");
-
--- CALL remove_user("chirag");
-
--- CALL add_penalty("graham", 1, "+2")
-
--- CALL get_solves(1);
--- CALL get_solves(2);
-
--- CALL get_winner(1);
--- CALL get_winner(2);
-
--- CALL find_friends('audrey');

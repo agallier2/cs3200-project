@@ -2,31 +2,32 @@ X = done in SQL
 OK = working with app too
 
 PROCEDURES - create
-X create session
-X new round in a session
-X submit solve in a round
-X add friend
-X create user
+OK create session
+OK new round in a session
+OK submit solve in a round
+OK add friend
+OK create user
 
 read
-X - find all the solves in a round
-- find all solves by user and cube type
+OK- find all the solves in a round
+OK find all solves by user and cube type
 OK - find a user's friends
-X - who won a round
-- current average of 5 for a user in a session
+OK - who won a round
+OK - current average of 5 for a user in a session
 
 update
-X change the penalty on a solve
-X update number of friends in users table
-X change session name
+OK change the penalty on a solve
+OK update number of friends in users table
+OK change session name
 
 delete
-- delete a session (should delete all rounds and solves)
-X unfriend
-X - delete a user
+OK delete a session (should delete all rounds and solves)
+OK delete a round
+OK unfriend
+OK delete a user
 
 TRIGGERS
-X store # of friends in users table
+OK store # of friends in users table
 
 FRONT END STUFF
 - login

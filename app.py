@@ -7,15 +7,29 @@ from typing import Tuple, List, Optional
 # Valid commands and help text
 COMMANDS = [
     ('q', [], 'quit'),
-    ('help', 'see list of commands'),
-    ('login', 'login via username'),
-    ('logout', 'reset current user'),
-    ('current_user', 'check current user'),
-    ('create_user', 'add a new user to the database'),
-    ('create_session', ['session_name', 'cube_type'], 'add a new session to the database'),
-    ('find_friends', [], 'see friends of the current user'),
+    ('help', [], 'see list of commands'),
+    ('login', ['username'], 'login via username'),
+    ('logout', [], 'reset current user'),
+    ('current_user', [], 'check current user'),
+    ('create_user', ['username'], 'add a new user to the database'),
+    ('delete_account', [], 'delete the account with the current username'),
+    ('update_username', ['username'], 'change your username\n'),
+    ('list_sessions', [], 'see list of all sessions'),
+    ('list_rounds', [], 'see list of all rounds in a session'),
+    ('list_solves', ['round_id'], 'see list of all solves in a round'),
+    ('create_session', ['session_name', 'cube_type'], 'add a new session to the database with the specified cube type'),
+    ('change_session_name', ['session_id', 'new_name'], 'change the name of a session'),
+    ('delete_session', ['session_id'], 'delete a session'),
+    ('add_round', ['scramble', 'session_id'], 'add a round to any existing session. specify a scramble'),
+    ('delete_round', ['round_id'], 'delete a round\n'),
+    ('add_solve', ['round_id', 'time', '[penalty]'], 'submit a solve time to a round, with optional penalty'),
+    ('change_penalty', ['round_id', 'penalty'], 'change the penalty on your solve for a round\n'),
+    ('get_winner', ['round_id'], 'find the winner of a round'),
+    ('my_solves', [], 'see list of all your solves, sorted by cube type and time'),
+    ('my_average_of_5', [], 'see average of your most recent 5 times\n'),
+    ('find_friends', [], 'see list of your friends'),
     ('add_friend', ['friend_name'], 'add a user as a friend'),
-    ('remove_friend', ['friend_name'], 'remove a user as a friend')
+    ('remove_friend', ['friend_name'], 'remove a user as a friend\n')
 ]
 
 def print_help() -> None:
@@ -166,6 +180,23 @@ class CommandExecutor:
             return None
 
         return execute_proc(self.fe_state.cnx, 'average_of_5', [self.fe_state.current_user['username']])
+
+    def get_winner(self, round_id: int):
+        return execute_proc(self.fe_state.cnx, 'get_winner', [round_id])
+
+    def change_penalty(self, round_id: int, penalty: str):
+        if not self.fe_state.check_logged_in():
+            return None
+        return execute_proc(self.fe_state.cnx, 'add_penalty', [self.fe_state.current_user['username'], round_id, penalty])
+
+    def change_session_name(self, session_id: int, new_name: str):
+        return execute_proc(self.fe_state.cnx, 'change_session_name', [session_id, new_name])
+
+    def delete_session(self, session_id: str):
+        return execute_proc(self.fe_state.cnx, 'delete_session', [session_id])
+
+    def delete_round(self, round_id: int):
+        return execute_proc(self.fe_state.cnx, 'delete_round', [round_id])
 
     @staticmethod
     def _argument_error_text(command: str, args_required: int, args_given: int) -> str:
