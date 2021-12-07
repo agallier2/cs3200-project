@@ -79,6 +79,7 @@ CREATE TABLE friends
 -- The note entity
 CREATE TABLE notes
 (
+	`note_id`	INT		PRIMARY KEY 	auto_increment,
 	`user_id`	INT,
     `text`		VARCHAR(256),
     CONSTRAINT notes_fk_user
