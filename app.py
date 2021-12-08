@@ -1,4 +1,5 @@
 import pymysql
+import shlex
 
 from getpass import getpass
 from inspect import signature
@@ -29,7 +30,11 @@ COMMANDS = [
     ('my_average_of_5', [], 'see average of your most recent 5 times\n'),
     ('find_friends', [], 'see list of your friends'),
     ('add_friend', ['friend_name'], 'add a user as a friend'),
-    ('remove_friend', ['friend_name'], 'remove a user as a friend\n')
+    ('remove_friend', ['friend_name'], 'remove a user as a friend\n'),
+    ('create_note', ['text'], 'add a new note'),
+    ('list_notes', [], 'list notes for the current user'),
+    ('upddate_note', ['note_id', 'new_text'], "update a note's content"),
+    ('delete_note', ['note_id'], 'remove a note\n')
 ]
 
 def print_help() -> None:
@@ -198,6 +203,26 @@ class CommandExecutor:
     def delete_round(self, round_id: int):
         return execute_proc(self.fe_state.cnx, 'delete_round', [round_id])
 
+    def create_note(self, text: str):
+        if not self.fe_state.check_logged_in():
+            return None
+        return execute_proc(self.fe_state.cnx, 'create_note', [self.fe_state.current_user['id'], text])
+
+    def list_notes(self):
+        if not self.fe_state.check_logged_in():
+            return None
+        return execute_proc(self.fe_state.cnx, 'list_notes', [self.fe_state.current_user['id']])
+
+    def update_note(self, note_id: int, text: str):
+        if not self.fe_state.check_logged_in():
+            return None
+        return execute_proc(self.fe_state.cnx, 'update_note', [self.fe_state.current_user['id'], note_id, text])
+
+    def delete_note(self, note_id: int):
+        if not self.fe_state.check_logged_in():
+            return None
+        return execute_proc(self.fe_state.cnx, 'delete_note', [self.fe_state.current_user['id'], note_id])
+
     @staticmethod
     def _argument_error_text(command: str, args_required: int, args_given: int) -> str:
         return f'Error: {command} takes {args_required} arguments, but {args_given} given'
@@ -277,7 +302,7 @@ def parse_user_input(user_input: str) -> Tuple[str, List[str]]:
     if not user_input:
         return None, []
 
-    terms = user_input.split()
+    terms = shlex.split(user_input)
     return terms[0], terms[1:]
 
 

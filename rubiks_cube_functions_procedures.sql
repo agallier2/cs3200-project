@@ -127,7 +127,7 @@ DROP PROCEDURE IF EXISTS remove_friend;
 DELIMITER //
 CREATE PROCEDURE remove_friend(IN name_1 VARCHAR(100), IN name_2 VARCHAR(100))
 BEGIN
-DELETE FROM friends WHERE (user_1_id = (SELECT get_user_id(name_1)) AND user_2_id = (SELECT get_user_id(name_2)) 
+DELETE FROM friends WHERE (user_1_id = (SELECT get_user_id(name_1)) AND user_2_id = (SELECT get_user_id(name_2))
 OR user_1_id = (SELECT get_user_id(name_2)) AND user_2_id = (SELECT get_user_id(name_1)));
 END //
 DELIMITER ;
@@ -165,7 +165,7 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS list_rounds;
 DELIMITER //
 CREATE PROCEDURE list_rounds(IN sid int)
-BEGIN 
+BEGIN
 SELECT * FROM rounds WHERE session_id = sid;
 END //
 DELIMITER ;
@@ -194,11 +194,11 @@ DROP PROCEDURE IF EXISTS find_solves_for_user;
 DELIMITER //
 CREATE PROCEDURE find_solves_for_user(IN uname VARCHAR(100))
 BEGIN
-SELECT round_id, time, penalty, name 
+SELECT round_id, time, penalty, name
 FROM (SELECT * FROM solves NATURAL JOIN rounds NATURAL JOIN
 (SELECT round_id, name FROM rounds NATURAL JOIN (SELECT session_id, name FROM sessions NATURAL JOIN cube_types) AS t) AS t2) AS t3
 WHERE user_id = (SELECT get_user_id(uname)) ORDER BY name, time ASC;
-END // 
+END //
 DELIMITER ;
 
 -- Procedure to calculate the current average of the last 5 time submitted by a user
@@ -236,5 +236,40 @@ DELIMITER //
 CREATE PROCEDURE delete_round(IN roundid INT)
 BEGIN
 	DELETE FROM rounds WHERE round_id = roundid;
+END //
+DELIMITER ;
+
+-- Procedure to create a note
+DROP PROCEDURE IF EXISTS create_note;
+DELIMITER //
+CREATE PROCEDURE create_note(IN userid INT, IN text VARCHAR(1000))
+BEGIN
+	INSERT INTO notes (`user_id`, `text`) VALUES (userid, text);
+END //
+DELIMITER ;
+
+-- Procedure to list notes for a user
+DROP PROCEDURE IF EXISTS list_notes;
+DELIMITER //
+CREATE PROCEDURE list_notes(IN userid INT)
+BEGIN
+	SELECT * FROM notes WHERE user_id = userid;
+END //
+DELIMITER ;
+
+-- Procedure to update a note belonging to a user
+DROP PROCEDURE IF EXISTS update_note;
+DELIMITER //
+CREATE PROCEDURE update_note(IN userid INT, IN noteid INT, IN new_text VARCHAR(1000))
+BEGIN
+	UPDATE notes SET text = new_text WHERE user_id = userid AND note_id = noteid;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS delete_note;
+DELIMITER //
+CREATE PROCEDURE delete_note(IN userid INT, IN noteid INT)
+BEGIN
+	DELETE FROM notes WHERE user_id = userid and note_id = noteid;
 END //
 DELIMITER ;

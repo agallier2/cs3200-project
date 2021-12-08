@@ -81,7 +81,7 @@ CREATE TABLE notes
 (
 	`note_id`	INT		PRIMARY KEY 	auto_increment,
 	`user_id`	INT,
-    `text`		VARCHAR(256),
+    `text`		VARCHAR(1000),
     CONSTRAINT notes_fk_user
     FOREIGN KEY (user_id)
     REFERENCES users (user_id)
@@ -92,7 +92,7 @@ CREATE TABLE notes
 DROP TRIGGER IF EXISTS update_friends;
 DELIMITER //
 CREATE TRIGGER update_friends AFTER INSERT ON friends
-FOR EACH ROW 
+FOR EACH ROW
 BEGIN
 	DECLARE friend_1 INT;
     DECLARE friend_2 INT;
@@ -107,7 +107,7 @@ DELIMITER ;
 DROP TRIGGER IF EXISTS update_friends_on_delete;
 DELIMITER //
 CREATE TRIGGER update_friends_on_delete BEFORE DELETE ON friends
-FOR EACH ROW 
+FOR EACH ROW
 BEGIN
 	DECLARE friend_1 INT;
     DECLARE friend_2 INT;
