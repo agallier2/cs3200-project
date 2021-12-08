@@ -273,3 +273,11 @@ BEGIN
 	DELETE FROM notes WHERE user_id = userid and note_id = noteid;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS list_cube_types
+DELIMITER //
+CREATE PROCEDURE list_cube_types()
+BEGIN
+	SELECT name from cube_types;
+END //
+DELIMITER ;

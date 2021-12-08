@@ -15,6 +15,7 @@ COMMANDS = [
     ('create_user', ['username'], 'add a new user to the database'),
     ('delete_account', [], 'delete the account with the current username'),
     ('update_username', ['username'], 'change your username\n'),
+    ('list_cube_types', [], 'see the names of all available cube types'),
     ('list_sessions', [], 'see list of all sessions'),
     ('list_rounds', [], 'see list of all rounds in a session'),
     ('list_solves', ['round_id'], 'see list of all solves in a round'),
@@ -149,6 +150,9 @@ class CommandExecutor:
         if not self.fe_state.check_logged_in():
             return None
         return execute_proc(self.fe_state.cnx, 'remove_friend', [self.fe_state.current_user['username'], friend_name])
+
+    def list_cube_types(self):
+        return execute_proc(self.fe_state.cnx, 'list_cube_types', [])
 
     def create_session(self, session_name: str, cube_type: str):
         return execute_proc(self.fe_state.cnx, 'create_session', [session_name, cube_type])
