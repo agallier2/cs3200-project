@@ -328,7 +328,7 @@ def run_command_loop(cnx: pymysql.connections.Connection) -> None:
         else:
             exc.execute_command(command, args)
 
-    cnx.commit()
+        cnx.commit()
 
 
 def main():
